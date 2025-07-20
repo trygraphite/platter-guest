@@ -22,6 +22,27 @@ function extractSubdomain(request: NextRequest): string | null {
     return null;
   }
 
+  // Handle Vercel deployment URLs (*.vercel.app)
+  if (hostname.endsWith('.vercel.app')) {
+    const parts = hostname.split('.');
+    
+    // For Vercel URLs with your project "platter-qr-guest", the format is:
+    // [subdomain-]platter-qr-guest.vercel.app
+    if (parts.length >= 3) {
+      const firstPart = parts[0];
+      const projectName = 'platter-qr-guest';
+      
+      // Check if the hostname starts with a subdomain prefix
+      if (firstPart !== projectName && firstPart.endsWith(`-${projectName}`)) {
+        // Extract the subdomain by removing the project name suffix
+        const subdomain = firstPart.replace(`-${projectName}`, '');
+        return subdomain;
+      }
+    }
+    
+    return null;
+  }
+
   // Regular subdomain detection for platterng.com
   const isSubdomain = 
     hostname !== 'platterng.com' &&
