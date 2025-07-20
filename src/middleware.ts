@@ -3,16 +3,11 @@ import { generateUserToken } from "@/utils/tokenGenerator";
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
-  const host = request.headers.get("host") || "";
-  const hostname = host.split(":")[0];
-
-  // Debug logging - remove this after testing
-  console.log("Debug - URL:", url);
-  console.log("Debug - Host:", host);
-  console.log("Debug - Hostname:", hostname);
+  const host = request.headers.get('host') || '';
+  const hostname = host.split(':')[0];
 
   // Local development environment
-  if (url.includes("localhost") || url.includes("127.0.0.1")) {
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
     // Try to extract subdomain from the full URL
     const fullUrlMatch = url.match(/http:\/\/([^.]+)\.localhost/);
     if (fullUrlMatch && fullUrlMatch[1]) {
@@ -20,46 +15,20 @@ function extractSubdomain(request: NextRequest): string | null {
     }
 
     // Fallback to host header approach
-    if (hostname.includes(".localhost")) {
-      return hostname.split(".")[0];
+    if (hostname.includes('.localhost')) {
+      return hostname.split('.')[0];
     }
 
-    return null;
-  }
-
-  // Handle Vercel deployment URLs (*.vercel.app)
-  if (hostname.endsWith(".vercel.app")) {
-    console.log("Debug - Vercel domain detected");
-    const parts = hostname.split(".");
-    console.log("Debug - Parts:", parts);
-
-    // For Vercel URLs with your project "platter-qr-guest", the format is:
-    // [subdomain-]platter-qr-guest.vercel.app
-    if (parts.length >= 3) {
-      const firstPart = parts[0];
-      console.log("Debug - First part:", firstPart);
-      const projectName = "platter-qr-guest";
-
-      // Check if the hostname starts with a subdomain prefix
-      if (firstPart !== projectName && firstPart.endsWith(`-${projectName}`)) {
-        // Extract the subdomain by removing the project name suffix
-        const subdomain = firstPart.replace(`-${projectName}`, "");
-        console.log("Debug - Extracted subdomain:", subdomain);
-        return subdomain;
-      }
-    }
-
-    console.log("Debug - No subdomain found for Vercel");
     return null;
   }
 
   // Regular subdomain detection for platterng.com
-  const isSubdomain =
-    hostname !== "platterng.com" &&
-    hostname !== "www.platterng.com" &&
-    hostname.endsWith(".platterng.com");
+  const isSubdomain = 
+    hostname !== 'platterng.com' &&
+    hostname !== 'www.platterng.com' &&
+    hostname.endsWith('.platterng.com');
 
-  return isSubdomain ? hostname.replace(".platterng.com", "") : null;
+  return isSubdomain ? hostname.replace('.platterng.com', '') : null;
 }
 
 export default async function middleware(request: NextRequest) {
@@ -67,20 +36,18 @@ export default async function middleware(request: NextRequest) {
   const subdomain = extractSubdomain(request);
 
   // Check for existing user token in cookies
-  const existingToken = request.cookies.get("user_token")?.value;
-
+  const existingToken = request.cookies.get('user_token')?.value;
+  
   // Generate response (either rewrite or next)
   let response: NextResponse;
-
+  
   if (subdomain) {
     // Block access to admin page from subdomains (if you have one)
-    if (pathname.startsWith("/admin")) {
-      response = NextResponse.redirect(new URL("/", request.url));
+    if (pathname.startsWith('/admin')) {
+      response = NextResponse.redirect(new URL('/', request.url));
     } else {
       // For any path on a subdomain, rewrite to the subdomain page
-      response = NextResponse.rewrite(
-        new URL(`/${subdomain}${pathname}`, request.url)
-      );
+      response = NextResponse.rewrite(new URL(`/${subdomain}${pathname}`, request.url));
     }
   } else {
     // On the root domain, allow normal access
@@ -89,27 +56,27 @@ export default async function middleware(request: NextRequest) {
 
   // If no token exists, generate and set one
   if (!existingToken) {
-    const userAgent = request.headers.get("user-agent") || "unknown";
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
-
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    
     // Generate token using utility function (now async)
     const newToken = await generateUserToken(userAgent, ip);
     // Set the token as an HTTP-only cookie
-    response.cookies.set("user_token", newToken, {
+    response.cookies.set('user_token', newToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365, // 1 year
-      path: "/",
+      path: '/'
     });
-
+    
     // Also set a readable cookie for client-side access
-    response.cookies.set("user_token_client", newToken, {
+    response.cookies.set('user_token_client', newToken, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365, // 1 year
-      path: "/",
+      path: '/'
     });
   }
 
