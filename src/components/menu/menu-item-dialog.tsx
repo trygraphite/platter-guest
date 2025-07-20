@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/drawer";
 import { useCart } from "@/providers/cart";
 import type { MenuItem, MenuItemVariety } from "@/types/restaurant";
+import Image from "next/image";
 
 interface MenuItemDialogProps {
   item: MenuItem;
@@ -111,9 +112,11 @@ function MenuItemForm({ item, onClose, className }: MenuItemFormProps) {
     <div className={`space-y-6 pb-4 ${className}`}>
       {/* Image */}
       <div className="relative">
-        <img
+        <Image
           src={item.image}
           alt={item.name}
+          width={400}
+          height={256}
           className="w-full h-64 object-cover rounded-lg"
         />
         {!item.isAvailable && (

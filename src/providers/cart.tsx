@@ -14,7 +14,6 @@ interface CartContextType {
 
 interface CartAction {
   type: "ADD_ITEM" | "REMOVE_ITEM" | "UPDATE_QUANTITY" | "CLEAR_CART";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
 }
 

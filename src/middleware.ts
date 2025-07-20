@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { generateUserToken } from "@/utils/tokenGenerator";
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -34,18 +35,52 @@ export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
+  // Check for existing user token in cookies
+  const existingToken = request.cookies.get('user_token')?.value;
+  
+  // Generate response (either rewrite or next)
+  let response: NextResponse;
+  
   if (subdomain) {
     // Block access to admin page from subdomains (if you have one)
     if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/', request.url));
+      response = NextResponse.redirect(new URL('/', request.url));
+    } else {
+      // For any path on a subdomain, rewrite to the subdomain page
+      response = NextResponse.rewrite(new URL(`/${subdomain}${pathname}`, request.url));
     }
-
-    // For any path on a subdomain, rewrite to the subdomain page
-    return NextResponse.rewrite(new URL(`/${subdomain}${pathname}`, request.url));
+  } else {
+    // On the root domain, allow normal access
+    response = NextResponse.next();
   }
 
-  // On the root domain, allow normal access
-  return NextResponse.next();
+  // If no token exists, generate and set one
+  if (!existingToken) {
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    
+    // Generate token using utility function (now async)
+    const newToken = await generateUserToken(userAgent, ip);
+    // Set the token as an HTTP-only cookie
+    response.cookies.set('user_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/'
+    });
+    
+    // Also set a readable cookie for client-side access
+    response.cookies.set('user_token_client', newToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/'
+    });
+  }
+
+  return response;
 }
 
 export const config = {

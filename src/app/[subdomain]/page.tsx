@@ -1,18 +1,10 @@
 import { getMenuData } from "@/utils/queries";
 import { ClientPage } from "./client-page";
+import { JSX } from "react";
 
-interface PageProps {
-  params: Promise<{ subdomain: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function RestaurantPage({ params }: PageProps) {
-  const { subdomain } = await params;
-
-  console.log("subdomain", subdomain);
-
+export default async function RestaurantPage({ params }: { params: any }): Promise<JSX.Element> {
+  const { subdomain } = params;
   const menuData = await getMenuData(subdomain);
-
   return (
     <ClientPage 
       subdomain={subdomain}

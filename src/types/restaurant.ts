@@ -5,6 +5,12 @@ export interface Restaurant {
   description: string;
   subdomain: string;
   website?: string;
+  address?: {
+    address: string;
+    city: string;
+    country: string;
+    postalCode?: string;
+  };
   contacts: {
     email: {
       value: string;
@@ -20,6 +26,7 @@ export interface Restaurant {
   }>;
   logo?: string;
   image?: string;
+  socials?: string[];
 }
 
 export interface MenuItemVariety {
@@ -103,4 +110,56 @@ export interface RestaurantContextType {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
+}
+
+// Order-related types
+export interface OrderItem {
+  item: string;
+  variety: string;
+  status: string;
+  name: string;
+  quantity: number;
+  price: number;
+  total: number;
+  image: string;
+  description: string;
+  resolvedName: string;
+}
+
+export interface OrderData {
+  _id: string;
+  customer: string;
+  orderNumber: number;
+  amount: number;
+  vat: number;
+  paymentMethod: string;
+  table: {
+    _id: string;
+    name: string;
+    resolvedName: string;
+    link: string;
+  };
+  items: OrderItem[];
+  status: string;
+}
+
+export interface OrderResponse {
+  path: string;
+  message: string;
+  timestamp: string;
+  data: OrderData;
+}
+
+export interface OrderStatusPageClientProps {
+  subdomain: string;
+  qr: string;
+  orderId: string;
+}
+
+export interface RestaurantHeaderProps {
+  restaurant: Restaurant | null;
+  getTodayHours: (
+    hours: { day: string; opening: string; closing: string }[] | undefined
+  ) => string | null;
+  qr: string;
 }

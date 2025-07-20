@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
@@ -22,6 +21,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useCart } from "@/providers/cart";
+import Image from "next/image";
 
 interface CartSheetProps {
   children: React.ReactNode;
@@ -66,9 +66,11 @@ export function CartSheet({ children }: CartSheetProps) {
                 return (
                   <div key={`${item.menuItemId}-${item.varietyId}`} className="bg-card rounded-lg p-4 border">
                     <div className="flex gap-3">
-                      <img
+                      <Image
                         src={item.menuItem.image}
                         alt={item.menuItem.name}
+                        width={64}
+                        height={64}
                         className="w-16 h-16 object-cover rounded-lg"
                       />
                       <div className="flex-1 min-w-0">

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/providers/cart";
 import type { MenuItem } from "@/types/restaurant";
 import { MenuItemDialog } from "./menu-item-dialog";
+import Image from "next/image";
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -46,9 +47,11 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
         onClick={() => setIsOpen(true)}
       >
         <div className="relative">
-          <img
+          <Image
             src={item.image}
             alt={item.name}
+            width={400}
+            height={192}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {!item.isAvailable && (
