@@ -14,16 +14,23 @@ function extractSubdomain(request: NextRequest): string | null {
     if (hostname?.includes(".vercel.app")) {
       // Split the hostname into parts
       const parts = hostname.split(".");
-      if (parts.length >= 3) {
-        // Extract the subdomain (e.g., "sauce-grill" from "sauce-grill.platter-qr-guest.vercel.app")
+      console.log(parts)
+      if (parts.length >= 4) {
+        // For URLs like "sauce-grill.platter-qr-guest.vercel.app"
+        // parts = ["sauce-grill", "platter-qr-guest", "vercel", "app"]
+        // Extract the first part as subdomain
         currentHost = parts[0];
+      } else if (parts.length === 3) {
+        // For URLs like "platter-qr-guest.vercel.app" (no subdomain)
+        // parts = ["platter-qr-guest", "vercel", "app"]
+        currentHost = null;
       } else {
-        // Handle cases where there is no subdomain (e.g., "platter-qr-guest.vercel.app")
         currentHost = null;
       }
     } else {
       // Handle custom domain or traditional subdomains
       currentHost = hostname?.replace(`.${process.env.BASE_DOMAIN}`, "");
+      console.log(currentHost)
     }
   } else {
     // Local development
