@@ -33,7 +33,6 @@ interface MenuProductGridProps {
   modalIsOpen: boolean;
   closeModal: () => void;
   selectedProduct: Product | null;
-  useFilteredProducts: (items: Product[], category: string) => Product[];
   handleCartQuantityChange: (
     product: Product,
     increment: boolean,
@@ -50,7 +49,6 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
   modalIsOpen,
   closeModal,
   selectedProduct,
-  useFilteredProducts,
   handleCartQuantityChange,
 }) => {
   const [scrollActiveCategory, setScrollActiveCategory] =
@@ -63,10 +61,12 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
   const filteredProductsByCategory = useMemo(() => {
     const result: Record<string, Product[]> = {};
     for (const category of categories) {
-      result[category] = useFilteredProducts(menuItems, category);
+      result[category] = menuItems.filter(
+        (item) => item.category?.group?.name === category
+      );
     }
     return result;
-  }, [categories, menuItems, useFilteredProducts]);
+  }, [categories, menuItems]);
 
   // Handle scroll to detect active category
   useEffect(() => {

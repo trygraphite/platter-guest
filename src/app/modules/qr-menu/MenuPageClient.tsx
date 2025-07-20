@@ -26,12 +26,6 @@ function useCategories(items: Product[]) {
   }, [items]);
 }
 
-function useFilteredProducts(items: Product[], category: string) {
-  return useMemo(() => {
-    return items.filter((item) => item.category?.group?.name === category);
-  }, [items, category]);
-}
-
 // MAIN COMPONENT
 export default function MenuPageClient({
   subdomain,
@@ -244,7 +238,6 @@ export default function MenuPageClient({
           modalIsOpen={modalIsOpen}
           closeModal={closeModal}
           selectedProduct={selectedProduct}
-          useFilteredProducts={useFilteredProducts}
           handleCartQuantityChange={handleCartQuantityChange}
         />
       </div>
