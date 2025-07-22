@@ -180,9 +180,8 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 
   return (
     <>
-      {/* Shared Bottom Container */}
+      {/* Cart Button - Only show if cart has items */}
       <div className="fixed bottom-20 right-4 z-40 flex items-end space-x-3">
-        {/* Cart Button - Only show if cart has items */}
         {cart.length > 0 && (
           <Button
             onClick={() => setIsCartOpen(true)}
@@ -192,50 +191,6 @@ const CartSummary: React.FC<CartSummaryProps> = ({
             Cart • {cartItemsCount} • {formatPrice(cartTotal)}
           </Button>
         )}
-
-        {/* Floating Actions - Always show */}
-        <div className="relative">
-          {/* Bell Button - Always show */}
-          <Button
-            size="lg"
-            className={`rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg transition-all duration-300 ${
-              isActionsExpanded ? "bg-blue-700" : ""
-            }`}
-            onClick={() => setIsActionsExpanded(!isActionsExpanded)}
-            title={isActionsExpanded ? "Close Actions" : "Open Actions"}
-          >
-            <Bell className="w-6 h-6" />
-          </Button>
-
-          {/* Expanded Action Buttons - Absolutely positioned */}
-          {isActionsExpanded && (
-            <div className="absolute bottom-19 right-0 flex flex-col space-y-3">
-              <Button
-                size="lg"
-                className="rounded-full w-full bg-green-600 hover:bg-green-700 shadow-lg transition-all duration-300 transform translate-y-0 text-md font-semibold whitespace-nowrap"
-                onClick={() => {
-                  callWaiter();
-                  setIsActionsExpanded(false);
-                }}
-                title="Call Waiter"
-              >
-                Request a waiter
-              </Button>
-              <Button
-                size="lg"
-                className="rounded-full w-full bg-orange-600 hover:bg-orange-700 shadow-lg transition-all duration-300 transform translate-y-0 text-md font-semibold whitespace-nowrap"
-                onClick={() => {
-                  requestBill();
-                  setIsActionsExpanded(false);
-                }}
-                disabled={!cart.length}
-                title="Request Bill"
-              >
-                Request a bill
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Bottom Slider - Only show if cart has items */}

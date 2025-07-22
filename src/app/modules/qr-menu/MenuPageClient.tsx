@@ -8,6 +8,7 @@ import { useCart } from "@/providers/cart";
 import RestaurantHeader from "./RestaurantHeader";
 import MenuProductGrid from "./MenuProductGrid";
 import CartSummary from "./CartSummary";
+import FloatingActions from "./FloatingActions";
 import { ChocoLoader } from "@/components/ui/choco-loader";
 
 // Types
@@ -21,7 +22,7 @@ interface MenuPageClientProps {
 function useCategories(items: Product[]) {
   return useMemo(() => {
     return Array.from(
-      new Set(items.map((item) => item.category?.group?.name).filter(Boolean))
+      new Set(items.map((item) => item.category?.name).filter(Boolean))
     ) as string[];
   }, [items]);
 }
@@ -253,6 +254,11 @@ export default function MenuPageClient({
         requestBill={requestBill}
         qr={qr}
       />
+      {/* Floating Actions (new) */}
+      <FloatingActions callWaiter={callWaiter} requestBill={requestBill} cart={cart.items} />
+      <div className="w-full text-center text-[10px] text-gray-400 mt-8 mb-2 select-none">
+        powered by <span className="font-bold text-primary">platterng</span>
+      </div>
     </div>
   );
 }

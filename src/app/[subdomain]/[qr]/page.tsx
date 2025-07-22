@@ -81,11 +81,11 @@ export default function TablePage() {
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            {/* Restaurant Image */}
+      {/* Restaurant Image */}
             <div className="flex-shrink-0">
-              <Image
+        <Image
                 src={restaurant.logo || restaurant.image || "/default-restaurant.png"}
-                alt={restaurant.name}
+          alt={restaurant.name}
                 width={120}
                 height={120}
                 className="rounded-2xl object-cover"

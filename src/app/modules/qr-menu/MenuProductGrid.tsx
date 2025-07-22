@@ -56,13 +56,13 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
+  console.log("all categories",categories);
   // Use useMemo to build filteredProductsByCategory at the top level
   const filteredProductsByCategory = useMemo(() => {
     const result: Record<string, Product[]> = {};
     for (const category of categories) {
       result[category] = menuItems.filter(
-        (item) => item.category?.group?.name === category
+        (item) => item.category?.name === category
       );
     }
     return result;
@@ -225,7 +225,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
             if (!open) closeModal();
           }}
         >
-          <DrawerContent className="h-[95vh] max-h-[98vh] w-full flex flex-col">
+          <DrawerContent className="h-[95vh] max-h-[95vh] w-full flex flex-col">
             {selectedProduct && (
               <>
                 <DrawerHeader className="pb-2">
@@ -233,7 +233,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
                     {selectedProduct.name}
                   </DrawerTitle>
                 </DrawerHeader>
-                <div className="flex flex-col w-full px-0">
+                <div className="flex flex-col w-full px-0 overflow-y-auto max-h-[calc(95vh-56px)] mb-6">
                   <Image
                     src={selectedProduct.image || "/file.svg"}
                     alt={selectedProduct.name}

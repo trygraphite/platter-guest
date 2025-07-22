@@ -68,7 +68,8 @@ export default function RestaurantHeader({
           </div>
           <h1 className="absolute bottom-12 left-4 text-left text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg px-2 md:left-1/2 md:-translate-x-1/2 md:text-center md:bottom-4 mb-2 md:mb-0">
             {restaurant?.name
-              ? restaurant.name.charAt(0).toUpperCase() + restaurant.name.slice(1)
+              ? restaurant.name.charAt(0).toUpperCase() +
+                restaurant.name.slice(1)
               : "Restaurant"}
           </h1>
           {/* Mobile-only description below the title */}
@@ -78,7 +79,7 @@ export default function RestaurantHeader({
             </p>
           )}
         </div>
-        
+
         {/* Original info card layout */}
         <div className="hidden md:flex flex-col md:flex-row gap-4 md:gap-6 items-start mx-4">
           <div className="relative w-full md:flex-1">
@@ -93,7 +94,7 @@ export default function RestaurantHeader({
                     restaurant.hours.length > 0 && (
                       <>
                         <button
-                          className="ml-2 text-xs text-blue-600 underline hover:text-blue-800 focus:outline-none"
+                          className="ml-2 text-md text-blue-600 underline hover:text-blue-800 focus:outline-none"
                           onClick={() => setHoursOpen(true)}
                           type="button"
                         >
@@ -102,7 +103,7 @@ export default function RestaurantHeader({
                         <Dialog open={hoursOpen} onOpenChange={setHoursOpen}>
                           <DialogContent className="max-w-xs w-full p-4">
                             <DialogTitle>Opening Hours</DialogTitle>
-                            <ul className="mt-4 text-sm text-gray-700 space-y-1">
+                            <ul className="mt-4 text-md text-gray-700 space-y-1">
                               {restaurant.hours.map((h, idx) => (
                                 <li key={h.day + idx} className="flex gap-2">
                                   <span className="capitalize w-20">
@@ -131,12 +132,25 @@ export default function RestaurantHeader({
                 </span>
               </div>
               <div className="flex items-start gap-2">
-                <Globe className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span className="text-blue-600 text-sm sm:text-base break-all">
-                  {restaurant?.website
-                    ? restaurant.website.replace(/^https?:\/\//, "")
-                    : "Website not available"}
-                </span>
+                <Globe className="w-4 h-4 mt-1 flex-shrink-0" />
+                {restaurant?.website ? (
+                  <a
+                    href={
+                      restaurant.website.startsWith("http")
+                        ? restaurant.website
+                        : `https://${restaurant.website}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline text-md break-all hover:text-blue-800 transition-colors"
+                  >
+                    {restaurant.website.replace(/^https?:\/\//, "")}
+                  </a>
+                ) : (
+                  <span className="text-blue-600 text-sm sm:text-base break-all">
+                    Website not available
+                  </span>
+                )}
               </div>
               <div className="flex items-start gap-2">
                 <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
