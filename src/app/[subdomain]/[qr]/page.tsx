@@ -81,10 +81,6 @@ export default function TablePage() {
             style={{ backgroundImage: `url(${restaurant.image || restaurant.logo})` }}
           />
         )}
-        {/* Decorative Elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
-
         {/* Home Button */}
         <div className="absolute top-4 left-4 z-10">
           <Button
