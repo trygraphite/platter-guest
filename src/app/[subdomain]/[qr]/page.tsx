@@ -91,7 +91,7 @@ export default function TablePage() {
             variant="ghost"
             size="sm"
             className="bg-white/90 hover:bg-white shadow-sm"
-            onClick={() => window.open(`http://${restaurant.subdomain}.localhost:3000/`, '_blank')}
+            onClick={() => window.open(`${restaurant.subdomain}.${process.env.NEXT_PUBLIC_MARKETING_DOMAIN}`, '_blank')}
           >
             <Home className="mr-2 h-4 w-4" />
             Home
