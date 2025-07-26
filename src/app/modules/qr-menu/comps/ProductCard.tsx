@@ -34,7 +34,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, handleCartQ
   };
 
   return (
-    <div className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border rounded-xl bg-gradient-to-br from-white to-orange-100" onClick={handleCardClick}>
+    <div className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border rounded-xl bg-gradient-to-br from-white to-orange-100 hover:scale-105 active:scale-95" onClick={handleCardClick}>
       <div className="relative">
         {product.image && (
           <Image
@@ -42,31 +42,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, handleCartQ
             alt={product.name}
             width={400}
             height={200}
-            className="w-full h-32 sm:h-40 md:h-48 object-cover"
+            className="w-full h-32 sm:h-40 md:h-60 object-cover transition-transform duration-300 hover:scale-105"
           />
         )}
         {product.outOfStock && (
           <span className="absolute top-3 left-3 bg-gray-200 px-2 py-1 rounded text-xs">Out of stock</span>
         )}
       </div>
-      <div className="p-2 sm:p-3 md:p-4">
-        <div className="flex items-start justify-between mb-1 sm:mb-2">
+      <div className="p-2 sm:p-2 md:p-3">
+        <div className="flex items-start justify-between mb-0.5 sm:mb-1">
           <div className="flex-1">
-            <div className="font-bold text-base sm:text-lg mb-0.5 sm:mb-1">
+            <div className="font-bold text-base sm:text-lg mb-0.5">
               {product.varieties && product.varieties.length > 1 ? "from " : ""}
               {formatPrice(product.price)}
             </div>
-            <h3 className="font-medium text-sm sm:text-base mb-0.5 sm:mb-1">{product.name}</h3>
-            {product.weight && (
-              <p className="text-xs sm:text-sm text-muted-foreground">{product.weight}</p>
-            )}
+            <h3 className="font-medium text-sm sm:text-base mb-0.5">{product.name}</h3>
+          
           </div>
         </div>
-        <div className="flex items-center justify-between mt-2 sm:mt-4">
+        <div className="flex items-center justify-between mt-1 sm:mt-2">
           <div />
           <Button
             size="sm"
-            className={`rounded-full w-8 h-8 p-0 ${product.outOfStock ? "bg-gray-400 cursor-not-allowed" : ""}`}
+            className={`rounded-full w-8 h-8 p-0 transition-all duration-200 hover:scale-110 active:scale-95 ${product.outOfStock ? "bg-gray-400 cursor-not-allowed" : "hover:shadow-md"}`}
             onClick={handleButtonClick}
             disabled={product.outOfStock}
             aria-label={

@@ -219,18 +219,7 @@ export default function OrderStatusPageClient({
 
   console.log("orderdets", order);
 
-  if (!businessId) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
-        <div className="flex items-center gap-3 bg-white p-6 rounded-lg border border-gray-200">
-          <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-lg font-medium">Loading business info...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
+  if (!businessId || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
         <ChocoLoader

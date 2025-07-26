@@ -58,7 +58,7 @@ export const iconMap: Record<string, ReactElement> = {
 };
 
 export function formatPrice(amount: number) {
-  return `₦${amount.toLocaleString()}`;
+  return `₦ ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
 export function formatDate(date: string | Date) {

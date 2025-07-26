@@ -10,6 +10,7 @@ import MenuProductGrid from "./MenuProductGrid";
 import CartSummary from "./CartSummary";
 import FloatingActions from "./FloatingActions";
 import { ChocoLoader } from "@/components/ui/choco-loader";
+import { MenuPageSkeleton } from "@/components/ui/restaurant-skeleton";
 
 // Types
 interface MenuPageClientProps {
@@ -191,31 +192,10 @@ export default function MenuPageClient({
     setIsCartOpen(false);
   };
 
-  const callWaiter = () =>
-    alert("🙋‍♂️ Waiter has been called! Someone will be with you shortly.");
 
-  const requestBill = () => {
-    if (!cart.items.length) {
-      alert("🧾 Your bill is $0.00. Add some items to your order first!");
-      return;
-    }
-    const cartDetails = cart.items
-      .map(
-        (item) =>
-          `${item.menuItem.name}${item.selectedVariety ? ` (${item.selectedVariety.name})` : ""} x${item.quantity} = $${(
-            (item.selectedVariety?.price || item.menuItem.price) * item.quantity
-          ).toFixed(2)}`
-      )
-      .join("\n");
-    alert(
-      `🧾 Your Bill:\n\n${cartDetails}\n\n💰 Total: $${cart.total.toFixed(
-        2
-      )}\n\nBill has been requested!`
-    );
-  };
 
   // UI
-  if (isLoading) return <ChocoLoader label="Loading menu..." subLabel="Please wait while we fetch the menu items" />;
+  if (isLoading) return <MenuPageSkeleton />;
   if (error)
     return (
       <div className="p-8 text-center text-red-500">Error loading menu.</div>
@@ -225,11 +205,13 @@ export default function MenuPageClient({
 
   // Only show category navigation (no group UI)
   return (
-    <div className="min-h-screen bg-background">
-      <RestaurantHeader restaurant={restaurant} qr={qr} />
+    <div className="min-h-screen bg-background animate-in fade-in duration-1000">
+      <div className="animate-in slide-in-from-bottom-4 duration-700">
+        <RestaurantHeader restaurant={restaurant} qr={qr} isLoading={isLoading} />
+      </div>
      
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 pb-4">
+      <div className="max-w-4xl mx-auto px-4 pb-4 animate-in fade-in duration-1000 delay-300">
         <MenuProductGrid
           menuItems={menuItems}
           categories={categories}
@@ -240,23 +222,24 @@ export default function MenuPageClient({
           closeModal={closeModal}
           selectedProduct={selectedProduct}
           handleCartQuantityChange={handleCartQuantityChange}
+          isLoading={isLoading}
         />
       </div>
-      <CartSummary
-        cart={cart.items}
-        cartTotal={cart.total}
-        cartItemsCount={cart.itemCount}
-        isCartOpen={isCartOpen}
-        setIsCartOpen={setIsCartOpen}
-        handleCartQuantityChange={handleCartQuantityChange}
-        clearCart={clearCartHandler}
-        callWaiter={callWaiter}
-        requestBill={requestBill}
-        qr={qr}
-      />
+      <div className="animate-in fade-in duration-700 delay-500">
+        <CartSummary
+          cart={cart.items}
+          cartTotal={cart.total}
+          cartItemsCount={cart.itemCount}
+          isCartOpen={isCartOpen}
+          setIsCartOpen={setIsCartOpen}
+          handleCartQuantityChange={handleCartQuantityChange}
+          clearCart={clearCartHandler}
+          qr={qr}
+        />
+      </div>
       {/* Floating Actions (new) */}
-      <FloatingActions callWaiter={callWaiter} requestBill={requestBill} cart={cart.items} />
-      <div className="w-full text-center text-[10px] text-gray-400 mt-8 mb-2 select-none">
+      {/* <FloatingActions callWaiter={callWaiter} requestBill={requestBill} cart={cart.items} /> */}
+      <div className="w-full text-center text-[10px] text-gray-400 mt-8 mb-2 select-none animate-in fade-in duration-1000 delay-700">
         powered by <span className="font-bold text-primary">platterng</span>
       </div>
     </div>

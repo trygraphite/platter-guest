@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { useRestaurant } from "@/providers/restaurant";
-import { MenuItemCard } from "@/components/menu/menu-item-card";
 import { CartButton } from "@/components/menu/cart-sheet";
-import Container from "@/components/layout/container";
+import { RestaurantLanding } from "@/components/restaurant/RestaurantLanding";
+import {
+  transformRestaurantData,
+  transformMenuData,
+} from "@/utils/restaurant-data-transformer";
 import type { MenuResponse } from "@/types/restaurant";
 import { useMenuItems } from "@/hooks/useMenuItems";
-import Image from "next/image";
+import { useCart } from "@/providers/cart";
+import { toast } from "sonner";
+import { ChocoLoader } from "@/components/ui/choco-loader";
+import { RestaurantLandingSkeleton } from "@/components/ui/restaurant-landing-skeleton";
 
 interface ClientPageProps {
   subdomain: string;
@@ -25,92 +30,91 @@ export function ClientPage({
     isLoading: restaurantLoading,
     error: restaurantError,
   } = useRestaurant();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const {
     data: menuData,
     isLoading: menuLoading,
     error: clientMenuError,
   } = useMenuItems(subdomain, initialMenuData);
-  console.log(menuData);
-  const menuItems = menuData?.docs || [];
+
+  const { addItem } = useCart();
   const menuError = serverMenuError || clientMenuError;
 
-  // Get unique categories
-  const categories = Array.from(
-    new Set(menuItems.map((item) => item.category?.group?.name).filter(Boolean))
-  ) as string[];
+  // Transform data for new components
+  const restaurantData = restaurant
+    ? transformRestaurantData(restaurant)
+    : null;
+  const menuDataTransformed = menuData ? transformMenuData(menuData) : null;
 
-  // Filter items by category
-  const filteredItems = selectedCategory
-    ? menuItems.filter(
-        (item) => item.category?.group?.name === selectedCategory
-      )
-    : menuItems;
+  // Handle menu item click
+  const handleMenuItemClick = (item: any) => {
+    // Convert back to the format expected by the cart
+    const cartItem = {
+      _id: item.id,
+      name: item.name,
+      price: item.price * 100, // Convert back to cents
+      image: item.image || "",
+      isAvailable: true,
+      resolvedName: item.name,
+      description: item.description,
+      business: restaurant
+        ? {
+            _id: restaurant._id,
+            name: restaurant.name,
+            logo: restaurant.logo || "",
+            image: restaurant.image || "",
+          }
+        : {
+            _id: "",
+            name: "Restaurant",
+            logo: "",
+            image: "",
+          },
+      servicePoint: {
+        _id: "",
+        name: "Service Point",
+        description: "",
+      },
+      category: {
+        _id: "",
+        group: {
+          _id: "",
+          name: item.category,
+          description: "",
+        },
+        name: item.category,
+        description: "",
+      },
+      createdBy: {
+        _id: "",
+        firstName: "Admin",
+        lastName: "User",
+        email: {
+          value: "admin@example.com",
+        },
+      },
+      varieties: [],
+    };
 
-  // Format operating hours
-  const formatOperatingHours = (
-    hours: { day: string; opening: string; closing: string }[]
-  ) => {
-    const currentDay = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ][new Date().getDay()];
-
-    const todayHours = hours.find((h) => h.day.toLowerCase() === currentDay);
-
-    if (todayHours) {
-      return `${todayHours.opening} - ${todayHours.closing}`;
-    }
-    return "Hours not available";
+    addItem(cartItem);
+    toast.success("Item Added!", {
+      description: `${item.name} has been added to your order.`,
+    });
   };
 
-  // Check if restaurant is open
-  const isRestaurantOpen = () => {
-    if (!restaurant?.hours?.length) return null;
-
-    const now = new Date();
-    const currentDay = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ][now.getDay()];
-    const currentTime = now.toTimeString().slice(0, 5);
-
-    const todayHours = restaurant.hours.find(
-      (h) => h.day.toLowerCase() === currentDay
-    );
-
-    if (!todayHours) return false;
-
-    return (
-      currentTime >= todayHours.opening && currentTime <= todayHours.closing
-    );
-  };
-
-  const isOpen = isRestaurantOpen();
-
-  if (restaurantLoading) {
+  if (restaurantLoading || menuLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading restaurant...</p>
-        </div>
+        <ChocoLoader
+          fullScreen={false}
+          label="Loading restaurant information"
+          subLabel="Please wait while we prepare your dining experience"
+        />
       </div>
     );
   }
 
-  if (restaurantError || !restaurant) {
+  if (restaurantError || !restaurant || !restaurantData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
@@ -126,179 +130,32 @@ export function ClientPage({
     );
   }
 
-  return (
-    <Container>
-      {/* Header */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-br from-primary to-primary/80">
-        {restaurant.image && (
-          <Image
-            src={restaurant.image}
-            alt={restaurant.name}
-            fill
-            className="w-full h-full object-cover"
-            sizes="100vw"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-          <Container className="text-center text-white">
-            {restaurant.logo && (
-              <div className="mb-4">
-                <Image
-                  src={restaurant.logo}
-                  alt={`${restaurant.name} logo`}
-                  width={80}
-                  height={80}
-                  className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-4 border-white shadow-lg"
-                />
-              </div>
-            )}
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {restaurant.name}
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-4 max-w-2xl mx-auto">
-              {restaurant.description}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-              <div
-                className={`px-4 py-2 rounded-full font-medium ${
-                  isOpen === true
-                    ? "bg-green-500 text-white"
-                    : isOpen === false
-                    ? "bg-red-500 text-white"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {isOpen === true
-                  ? "Open Now"
-                  : isOpen === false
-                  ? "Closed"
-                  : "Hours Unknown"}
-              </div>
-              {restaurant.hours.length > 0 && (
-                <span className="text-white/80 bg-black/20 px-3 py-1 rounded-full">
-                  Today: {formatOperatingHours(restaurant.hours)}
-                </span>
-              )}
-            </div>
-          </Container>
+  if (menuError || !menuDataTransformed) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Error</h1>
+          <p className="text-muted-foreground">Failed to load menu data</p>
+          <p className="text-sm text-destructive mt-2">
+            {typeof menuError === "string" ? menuError : menuError?.message}
+          </p>
         </div>
       </div>
+    );
+  }
 
-      {/* Content */}
-      <Container className="py-6 md:py-8">
-        {/* Categories */}
-        {categories.length > 0 && (
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === null
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                all
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategory === category
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {category.toLowerCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Selected Category Title */}
-        <div className="mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground capitalize">
-            {selectedCategory || "All Items"}
-          </h2>
-        </div>
-
-        {/* Menu Items */}
-        {menuLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading menu...</p>
-            </div>
-          </div>
-        ) : menuError ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              Error loading menu
-            </h3>
-            <p className="text-muted-foreground">Please try again later</p>
-            <p className="text-sm text-destructive mt-2">
-              {typeof menuError === "string" ? menuError : menuError.message}
-            </p>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              No items found
-            </h3>
-            <p className="text-muted-foreground">
-              {selectedCategory
-                ? `No items available in "${selectedCategory}" category`
-                : "This restaurant hasn't added any menu items yet"}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredItems.map((item) => (
-              <MenuItemCard key={item._id} item={item} />
-            ))}
-          </div>
-        )}
-
-        {/* Restaurant Info */}
-        <div className="mt-12 bg-card rounded-lg border p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Contact Information
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-foreground">Contact:</span>{" "}
-              <span className="text-muted-foreground">
-                {restaurant.contacts.name}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-foreground">Phone:</span>{" "}
-              <span className="text-muted-foreground">
-                {restaurant.contacts.phone}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-foreground">Email:</span>{" "}
-              <span className="text-muted-foreground">
-                {restaurant.contacts.email.value}
-              </span>
-            </div>
-            {restaurant.website && (
-              <div>
-                <span className="font-medium text-foreground">Website:</span>{" "}
-                <span className="text-muted-foreground">
-                  {restaurant.website}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Container>
-
-      {/* Floating Cart Button */}
+  return (
+    <>
+      <RestaurantLanding
+        restaurantData={restaurantData}
+        menuData={menuDataTransformed}
+        currency="₦"
+        onMenuItemClick={handleMenuItemClick}
+        isLoading={restaurantLoading || menuLoading}
+        isRestaurantLoading={restaurantLoading}
+        isMenuLoading={menuLoading}
+      />
       <CartButton />
-    </Container>
+    </>
   );
 }

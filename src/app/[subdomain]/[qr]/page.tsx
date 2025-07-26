@@ -39,7 +39,15 @@ export default function TablePage() {
   };
 
   if (isLoading) {
-    return <ChocoLoader label="Loading restaurant..." subLabel="Please wait while we fetch restaurant information" />;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <ChocoLoader 
+          fullScreen={false}
+          label="Loading restaurant..." 
+          subLabel="Please wait while we fetch restaurant information" 
+        />
+      </div>
+    );
   }
 
   if (error) {
@@ -64,45 +72,55 @@ export default function TablePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Home Button */}
-      <div className="absolute top-4 left-4 z-10">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="bg-white/90 hover:bg-white shadow-sm"
-          onClick={() => window.open(`http://${restaurant.subdomain}.localhost:3000/`, '_blank')}
-        >
-          <Home className="mr-2 h-4 w-4" />
-          Home
-        </Button>
-      </div>
+      {/* Header Section with background image and gradient */}
+      <div className="relative overflow-hidden min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-background via-secondary to-accent">
+        {/* Background Image */}
+        {(restaurant.image || restaurant.logo) && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-40 animate-in fade-in duration-1000"
+            style={{ backgroundImage: `url(${restaurant.image || restaurant.logo})` }}
+          />
+        )}
+        {/* Decorative Elements */}
+        <div className="absolute top-10 left-10 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-      {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Home Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="bg-white/90 hover:bg-white shadow-sm"
+            onClick={() => window.open(`http://${restaurant.subdomain}.localhost:3000/`, '_blank')}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            Home
+          </Button>
+        </div>
+
+        {/* Header Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 py-10 text-center animate-in fade-in duration-1000">
           <div className="flex flex-col md:flex-row items-center gap-6">
-      {/* Restaurant Image */}
-            <div className="flex-shrink-0">
-        <Image
+            {/* Restaurant Image */}
+            <div className="flex-shrink-0 mb-6 animate-in zoom-in duration-700">
+              <Image
                 src={restaurant.logo || restaurant.image || "/default-restaurant.png"}
-          alt={restaurant.name}
+                alt={restaurant.name}
                 width={120}
                 height={120}
-                className="rounded-2xl object-cover"
+                className="rounded-full object-cover shadow-lg w-24 h-24 mx-auto"
               />
             </div>
-            
             {/* Restaurant Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 animate-in slide-in-from-bottom-4 duration-700">
                 {restaurant.name?.charAt(0).toUpperCase() + restaurant.name?.slice(1) || "Restaurant"}
               </h1>
-              <p className="text-gray-600 mb-4 max-w-2xl">
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-in fade-in duration-1000 delay-300">
                 {restaurant.description || "Welcome to our restaurant"}
               </p>
-              
               {/* Table Info */}
-              <div className="inline-flex items-center justify-center bg-blue-50 text-blue-700 px-4 py-2 rounded-full font-medium">
+              <div className="inline-flex items-center justify-center bg-blue-50 text-blue-700 px-4 py-2 rounded-full font-medium animate-in zoom-in duration-700 delay-600">
                 <span className="text-lg">Table:</span>
                 <span className="ml-2 text-lg">{(tableName || tableId).toUpperCase()}</span>
               </div>
@@ -114,37 +132,36 @@ export default function TablePage() {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Action Buttons */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 animate-in fade-in duration-700">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button 
-                  variant="default" 
+                <Button
+                  variant="default"
                   size="lg"
                   onClick={() => router.push(`${pathname}/menu`)}
                   className="h-14 text-base font-medium"
                 >
                   🍽️ View Menu
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="lg"
                   onClick={() => router.push(`${pathname}/view-orders`)}
                   className="h-14 text-base font-medium"
                 >
                   📋 View Orders
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="lg"
                   className="h-14 text-base font-medium"
                 >
                   📝 Leave Review
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="lg"
                   className="h-14 text-base font-medium"
                 >
@@ -152,21 +169,18 @@ export default function TablePage() {
                 </Button>
               </div>
             </div>
-
             {/* Restaurant Description */}
             {restaurant.description && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6 animate-in fade-in duration-700 delay-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">About Us</h3>
                 <p className="text-gray-700 leading-relaxed">{restaurant.description}</p>
               </div>
             )}
           </div>
-
           {/* Restaurant Details Sidebar */}
           <div className="space-y-6">
-            
             {/* Hours */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 animate-in fade-in duration-700 delay-200">
               <div className="flex items-center gap-3 mb-4">
                 <Clock className="w-5 h-5 text-blue-600" />
                 <h3 className="font-semibold text-gray-900">Hours</h3>
@@ -183,10 +197,9 @@ export default function TablePage() {
                 </div>
               )}
             </div>
-
             {/* Location */}
             {restaurant.address && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6 animate-in fade-in duration-700 delay-300">
                 <div className="flex items-center gap-3 mb-4">
                   <MapPin className="w-5 h-5 text-green-600" />
                   <h3 className="font-semibold text-gray-900">Location</h3>
@@ -198,15 +211,14 @@ export default function TablePage() {
                 </address>
               </div>
             )}
-
             {/* Contact Info */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 animate-in fade-in duration-700 delay-400">
               <h3 className="font-semibold text-gray-900 mb-4">Contact</h3>
               <div className="space-y-3">
                 {restaurant.contacts?.phone && (
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-gray-500" />
-                    <a 
+                    <a
                       href={`tel:${restaurant.contacts.phone}`}
                       className="text-blue-600 hover:text-blue-800"
                     >
@@ -217,7 +229,7 @@ export default function TablePage() {
                 {restaurant.contacts?.email?.value && (
                   <div className="flex items-center gap-3">
                     <Mail className="w-4 h-4 text-gray-500" />
-                    <a 
+                    <a
                       href={`mailto:${restaurant.contacts.email.value}`}
                       className="text-blue-600 hover:text-blue-800"
                     >
@@ -228,7 +240,7 @@ export default function TablePage() {
                 {restaurant.website && (
                   <div className="flex items-center gap-3">
                     <Globe className="w-4 h-4 text-gray-500" />
-                    <a 
+                    <a
                       href={restaurant.website}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -241,7 +253,7 @@ export default function TablePage() {
                 {restaurant.socials && restaurant.socials.length > 0 && (
                   <div className="flex items-center gap-3">
                     <Instagram className="w-4 h-4 text-gray-500" />
-                    <a 
+                    <a
                       href={restaurant.socials[0]}
                       target="_blank"
                       rel="noopener noreferrer"

@@ -21,8 +21,6 @@ interface CartSummaryProps {
     varietyId?: string
   ) => void;
   clearCart: () => void;
-  callWaiter: () => void;
-  requestBill: () => void;
   qr: string;
 }
 
@@ -126,8 +124,6 @@ const CartSummary: React.FC<CartSummaryProps> = ({
   setIsCartOpen,
   handleCartQuantityChange,
   clearCart,
-  callWaiter,
-  requestBill,
   qr,
 }) => {
   const [isActionsExpanded, setIsActionsExpanded] = React.useState(false);
@@ -181,14 +177,18 @@ const CartSummary: React.FC<CartSummaryProps> = ({
   return (
     <>
       {/* Cart Button - Only show if cart has items */}
-      <div className="fixed bottom-20 right-4 z-40 flex items-end space-x-3">
+      <div className="fixed bottom-20 right-10 z-40 flex items-end space-x-3">
         {cart.length > 0 && (
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold p-8 rounded-xl shadow-lg text-lg"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold p-6 rounded-xl shadow-lg w-[300px] animate-in slide-in-from-bottom-4 duration-500"
           >
-            <ShoppingCart size={30} className="mr-3" />
-            Cart • {cartItemsCount} • {formatPrice(cartTotal)}
+            <div className="flex justify-between items-center w-full">
+              <span className="text-xl font-medium">Cart</span>
+              <span className="text-xl font-bold text-white drop-shadow-sm">
+                {formatPrice(cartTotal)}
+              </span>
+            </div>
           </Button>
         )}
       </div>
@@ -213,14 +213,25 @@ const CartSummary: React.FC<CartSummaryProps> = ({
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Your Order</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearCart}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearCart}
+                    className="text-gray-500 hover:text-red-500"
+                    title="Clear cart"
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsCartOpen(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -260,7 +271,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
                 </span>
               </div>
               <Button
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-xl"
                 onClick={handlePlaceOrder}
                 disabled={isPlacingOrder}
               >

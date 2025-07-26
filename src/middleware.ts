@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { generateUserToken } from "@/utils/tokenGenerator";
+import { restaurantExists } from "@/utils/restaurant-exists";
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -42,6 +43,12 @@ export default async function middleware(request: NextRequest) {
   let response: NextResponse;
   
   if (subdomain) {
+    // Check if subdomain exists using the utility
+    const exists = await restaurantExists(subdomain);
+    if (!exists) {
+      const marketingDomain = process.env.NEXT_PUBLIC_MARKETING_DOMAIN || 'https://platterng.com';
+      return NextResponse.redirect(new URL(marketingDomain));
+    }
     // Block access to admin page from subdomains (if you have one)
     if (pathname.startsWith('/admin')) {
       response = NextResponse.redirect(new URL('/', request.url));

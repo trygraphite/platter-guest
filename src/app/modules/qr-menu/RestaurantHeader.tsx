@@ -5,18 +5,25 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Clock, MapPin, Globe, Users, ArrowLeft } from "lucide-react";
 import type { Restaurant } from "@/types/restaurant";
 import { useRouter } from "next/navigation";
+import { RestaurantHeaderSkeleton } from "@/components/ui/restaurant-skeleton";
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant | null;
   qr: string;
+  isLoading?: boolean;
 }
 
 export default function RestaurantHeader({
   restaurant,
   qr,
+  isLoading = false,
 }: RestaurantHeaderProps) {
   const router = useRouter();
   const [hoursOpen, setHoursOpen] = useState(false);
+
+  if (isLoading || !restaurant) {
+    return <RestaurantHeaderSkeleton />;
+  }
 
   // Find today's hours
   let todayLabel = "";

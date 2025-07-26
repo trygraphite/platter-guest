@@ -13,6 +13,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import ProductGrid from "./comps/ProductGrid";
 import VarietyRadioGroup from "./comps/VarietyRadioGroup";
 import Image from "next/image";
+import { CategoryNavigationSkeleton, ProductGridSkeleton } from "@/components/ui/restaurant-skeleton";
 
 // Extend Variety type locally to include optional weight
 type VarietyWithWeight = {
@@ -38,6 +39,7 @@ interface MenuProductGridProps {
     increment: boolean,
     varietyId?: string
   ) => void;
+  isLoading?: boolean;
 }
 
 const MenuProductGrid: React.FC<MenuProductGridProps> = ({
@@ -50,6 +52,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
   closeModal,
   selectedProduct,
   handleCartQuantityChange,
+  isLoading = false,
 }) => {
   const [scrollActiveCategory, setScrollActiveCategory] =
     useState(activeCategory);
@@ -57,6 +60,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
   const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isDesktop = useMediaQuery("(min-width: 768px)");
   console.log("all categories",categories);
+  
   // Use useMemo to build filteredProductsByCategory at the top level
   const filteredProductsByCategory = useMemo(() => {
     const result: Record<string, Product[]> = {};
@@ -106,16 +110,31 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
     }
   };
 
+  if (isLoading) {
+    return (
+      <>
+        <CategoryNavigationSkeleton />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} style={{ animationDelay: `${index * 0.2}s` }}>
+              <ProductGridSkeleton />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Fixed Category Navigation */}
       <div
-        className={`sticky top-0 z-10 bg-background transition-all ${
+        className={`sticky top-0 z-10 bg-background transition-all animate-in fade-in duration-700 ${
           scrolled ? "border-b shadow-sm" : ""
         }`}
       >
         <div className="flex gap-2 py-2 overflow-x-auto">
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <Button
               key={category}
               variant={
@@ -123,29 +142,34 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
               }
               size="lg"
               onClick={() => scrollToCategory(category)}
-              className="whitespace-nowrap flex-shrink-0 text-xl rounded-2xl"
+              className="whitespace-nowrap flex-shrink-0 text-xl rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               {category}
             </Button>
           ))}
         </div>
       </div>
+    
 
       {/* Category Sections */}
-      <div className="space-y-4">
-        {categories.map((category) => (
+      <div className="space-y-8 mt-4">
+        {categories.map((category, categoryIndex) => (
           <div
             key={category}
             ref={(el) => {
               categoryRefs.current[category] = el;
             }}
             id={`category-${category}`}
+            className="scroll-mt-16 animate-in fade-in duration-700"
+            style={{ animationDelay: `${categoryIndex * 0.2}s` }}
           >
             <ProductGrid
               category={category}
               products={filteredProductsByCategory[category]}
               onProductClick={openModalWithProduct}
               handleCartQuantityChange={handleCartQuantityChange}
+              isLoading={isLoading}
             />
           </div>
         ))}
@@ -161,7 +185,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
         >
           <DialogContent
             showCloseButton={false}
-            className="w-[95vw] max-w-md md:max-w-2xl p-0 overflow-hidden max-h-[90vh]"
+            className="w-[95vw] max-w-md md:max-w-2xl p-0 overflow-hidden max-h-[90vh] animate-in zoom-in duration-300"
           >
             <DialogTitle className="sr-only">Product Details</DialogTitle>
             {selectedProduct && (
@@ -200,7 +224,7 @@ const MenuProductGrid: React.FC<MenuProductGridProps> = ({
                         No varieties available for this product.
                       </p>
                       <Button
-                        className="w-full rounded-xl py-4 text-lg font-semibold mt-auto bg-orange-500 hover:bg-orange-600 text-white"
+                        className="w-full rounded-xl py-6 text-lg font-semibold mt-auto bg-orange-500 hover:bg-orange-600 text-white"
                         onClick={() => {
                           handleCartQuantityChange(selectedProduct, true);
                           closeModal();
