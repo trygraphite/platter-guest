@@ -13,10 +13,18 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
-import { OrderData } from "@/types/restaurant";
+import {
+  OrderData,
+  OrderItem,
+  MenuItem,
+  MenuItemVariety,
+} from "@/types/restaurant";
 import { useOrderDetails } from "@/hooks/useOrderDetails";
+import { useCancelOrder } from "@/hooks/useCancelOrder";
+import { useEditOrder } from "@/hooks/useEditOrder";
 import { useRestaurant } from "@/providers/restaurant";
-import { statusConfigs, formatPrice } from "@/lib/utils";
+import { useCart } from "@/providers/cart";
+import { statusConfigs, formatPrice, OrderStatus } from "@/lib/utils";
 import { ChocoLoader } from "@/components/ui/choco-loader";
 import Image from "next/image";
 
@@ -29,25 +37,27 @@ interface OrderStatusPageClientProps {
 function OrderStatusDisplay({ status }: { status: string }) {
   // Enhanced status display with estimated times
   const iconMap: Record<string, ReactElement> = {
-    pending: <Clock className="h-10 w-10" />,
-    confirmed: <Clock className="h-10 w-10" />,
-    preparing: <Package className="h-10 w-10" />,
-    delivered: <CheckCircle2 className="h-10 w-10" />,
-    cancelled: <XCircle className="h-10 w-10" />,
+    [OrderStatus.PENDING]: <Clock className="h-10 w-10" />,
+    [OrderStatus.CONFIRMED]: <Clock className="h-10 w-10" />,
+    [OrderStatus.PREPARING]: <Package className="h-10 w-10" />,
+    [OrderStatus.DELIVERED]: <CheckCircle2 className="h-10 w-10" />,
+    [OrderStatus.COMPLETED]: <CheckCircle2 className="h-10 w-10" />,
+    [OrderStatus.CANCELLED]: <XCircle className="h-10 w-10" />,
   };
 
   const estimatedTimeMap: Record<string, string> = {
-    pending: "Waiting for confirmation",
-    confirmed: "15-20 minutes",
-    preparing: "10-15 minutes",
-    delivered: "Completed",
-    cancelled: "Order cancelled",
+    [OrderStatus.PENDING]: "Waiting for confirmation",
+    [OrderStatus.CONFIRMED]: "15-20 minutes",
+    [OrderStatus.PREPARING]: "10-15 minutes",
+    [OrderStatus.DELIVERED]: "Completed",
+    [OrderStatus.COMPLETED]: "Completed",
+    [OrderStatus.CANCELLED]: "Order cancelled",
   };
 
   const config =
     statusConfigs[status as keyof typeof statusConfigs] ||
-    statusConfigs.pending;
-  const icon = iconMap[status] || iconMap["pending"];
+    statusConfigs[OrderStatus.PENDING];
+  const icon = iconMap[status] || iconMap[OrderStatus.PENDING];
   const estimatedTime = estimatedTimeMap[status] || "Calculating...";
 
   return (
@@ -59,13 +69,15 @@ function OrderStatusDisplay({ status }: { status: string }) {
         <div className="space-y-2">
           <h3 className="text-2xl font-bold">{config.text}</h3>
           <p className="text-base opacity-90">{config.message}</p>
-          {status !== "delivered" && status !== "cancelled" && (
-            <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg">
-              <p className="text-sm font-medium">
-                Estimated time: {estimatedTime}
-              </p>
-            </div>
-          )}
+          {status !== OrderStatus.DELIVERED &&
+            status !== OrderStatus.COMPLETED &&
+            status !== OrderStatus.CANCELLED && (
+              <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg">
+                <p className="text-sm font-medium">
+                  Estimated time: {estimatedTime}
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>
@@ -152,24 +164,142 @@ function OrderDetails({ order }: { order: OrderData }) {
 
 function OrderActions({ order, qr }: { order: OrderData; qr: string }) {
   const router = useRouter();
-  const [isCancelling, setIsCancelling] = useState(false);
+  const {
+    mutate: cancelOrder,
+    isPending: isCancelling,
+    error: cancelError,
+  } = useCancelOrder();
+  const { clearCart, addItem } = useCart();
+  const { restaurant } = useRestaurant();
+
+  // Get customer ID from cookie
+  const getCustomerId = () => {
+    if (typeof document === "undefined") return "";
+    const match = document.cookie.match(/user_token_client=([^;]+)/);
+    return match ? match[1] : "";
+  };
+
+  // Convert order items to cart items
+  const convertOrderItemsToCart = (orderItems: OrderItem[]) => {
+    orderItems.forEach((orderItem) => {
+      // Convert OrderItem to MenuItem format
+      const menuItem: MenuItem = {
+        _id: orderItem.item,
+        name: orderItem.name,
+        price: orderItem.price,
+        image: orderItem.image,
+        isAvailable: true,
+        resolvedName: orderItem.resolvedName,
+        description: orderItem.description,
+        business: restaurant
+          ? {
+              _id: restaurant._id,
+              name: restaurant.name,
+              logo: restaurant.logo || "",
+              image: restaurant.image || "",
+            }
+          : {
+              _id: "",
+              name: "Restaurant",
+              logo: "",
+              image: "",
+            },
+        servicePoint: {
+          _id: "",
+          name: "Service Point",
+          description: "",
+        },
+        category: {
+          _id: "",
+          group: {
+            _id: "",
+            name: "General",
+            description: "",
+          },
+          name: "General",
+          description: "",
+        },
+        createdBy: {
+          _id: "",
+          firstName: "Admin",
+          lastName: "User",
+          email: {
+            value: "admin@example.com",
+          },
+        },
+        varieties: orderItem.variety
+          ? [
+              {
+                _id: orderItem.variety,
+                name: "Default",
+                image: "",
+                resolvedName: "Default",
+                description: "",
+                price: orderItem.price,
+                isAvailable: true,
+                isDefault: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ]
+          : [],
+      };
+
+      // Find the variety if it exists
+      const variety = orderItem.variety
+        ? menuItem.varieties.find((v) => v._id === orderItem.variety)
+        : undefined;
+
+      // Add to cart
+      addItem(menuItem, variety, orderItem.quantity);
+    });
+  };
 
   const handleCancelOrder = async () => {
-    setIsCancelling(true);
-    try {
-      // TODO: Implement actual cancel order API call
-      alert("Cancel order functionality will be implemented soon");
-    } catch (error) {
-      console.error("Failed to cancel order:", error);
-    } finally {
-      setIsCancelling(false);
+    const customerId = getCustomerId();
+    if (!customerId) {
+      alert("Unable to identify customer. Please try refreshing the page.");
+      return;
     }
+
+    if (
+      confirm(
+        "Are you sure you want to cancel this order? This action cannot be undone."
+      )
+    ) {
+      cancelOrder(
+        {
+          order: order._id,
+          customer: customerId,
+          business: restaurant?._id || "",
+        },
+        {
+          onSuccess: () => {
+            alert("Order cancelled successfully!");
+          },
+          onError: (error) => {
+            console.error("Failed to cancel order:", error);
+            alert("Failed to cancel order. Please try again.");
+          },
+        }
+      );
+    }
+  };
+
+  const handleModifyOrder = () => {
+    // Clear current cart and populate with order items
+    clearCart();
+    convertOrderItemsToCart(order.items);
+
+    // Navigate to menu page with order ID for editing
+    router.push(`/${qr}/menu?editing=true&orderId=${order._id}`);
   };
 
   return (
     <div className="space-y-3 p-6 bg-gray-50 rounded-t-none border-t border-gray-200">
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {(order.status === "pending" || order.status === "confirmed") && (
+        {(order.status === OrderStatus.PENDING ||
+          order.status === OrderStatus.CONFIRMED) && (
           <Button
             variant="destructive"
             disabled={isCancelling}
@@ -192,11 +322,11 @@ function OrderActions({ order, qr }: { order: OrderData; qr: string }) {
         )}
         <Button
           variant="outline"
-          onClick={() => router.push(`/${qr}/menu`)}
+          onClick={handleModifyOrder}
           className="w-full sm:w-auto px-6 py-3 font-semibold border-2"
           size="lg"
         >
-          Place Another Order
+          Modify Order
         </Button>
       </div>
     </div>

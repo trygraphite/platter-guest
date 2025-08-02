@@ -4,7 +4,8 @@ import { ShoppingCart, X, Plus, Minus, Bell } from "lucide-react";
 import type { CartItem as RestaurantCartItem } from "../../../types/restaurant";
 import type { Product } from "../../../types/menu";
 import { usePlaceOrder } from "@/hooks/usePlaceOrder";
-import { useRouter } from "next/navigation";
+import { useEditOrder } from "@/hooks/useEditOrder";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRestaurant } from "@/providers/restaurant";
 import { formatPrice } from "@/lib/utils";
 import Image from "next/image";
@@ -129,8 +130,28 @@ const CartSummary: React.FC<CartSummaryProps> = ({
   const [isActionsExpanded, setIsActionsExpanded] = React.useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = React.useState(false);
   const { placeOrder } = usePlaceOrder();
-  const { restaurant } = useRestaurant(); // Get businessId here
+  const { restaurant } = useRestaurant();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check if we're in editing mode
+  const isEditing = searchParams.get("editing") === "true";
+  const orderId = searchParams.get("orderId");
+
+  // Get customer ID from cookie
+  const getCustomerId = () => {
+    if (typeof document === "undefined") return "";
+    const match = document.cookie.match(/user_token_client=([^;]+)/);
+    return match ? match[1] : "";
+  };
+
+  // Initialize edit order hook if in editing mode
+  const customerId = getCustomerId();
+  const businessId = restaurant?._id;
+  const { mutate: editOrder, isPending: isEditingOrder } = useEditOrder(
+    businessId || "",
+    customerId
+  );
 
   // Helper to map cart to order payload
   const getOrderPayload = () => {
@@ -146,26 +167,51 @@ const CartSummary: React.FC<CartSummaryProps> = ({
   const handlePlaceOrder = async () => {
     setIsPlacingOrder(true);
     try {
-      const orderResponse = await placeOrder(getOrderPayload());
-      clearCart();
-      setIsCartOpen(false);
-
-      // Extract orderId from the response (adjust this if your API returns a different field)
-      const orderId = orderResponse?.data?._id || orderResponse?._id;
-      const businessId = restaurant?._id;
-
-      // Pass both orderId and businessId to the order status page
-      if (orderId && businessId) {
-        const redirectUrl = `/${qr}/order-status/${orderId}?businessId=${businessId}`;
-        console.log(
-          "[CartSummary] Redirecting to:",
-          redirectUrl,
-          "with businessId:",
-          businessId
+      if (isEditing && orderId) {
+        // Update existing order
+        await editOrder(
+          {
+            order: orderId,
+            items: getOrderPayload().items,
+          },
+          {
+            onSuccess: () => {
+              alert("Order updated successfully!");
+              clearCart();
+              setIsCartOpen(false);
+              // Navigate back to order status page
+              router.push(`/${qr}/order-status/${orderId}`);
+            },
+            onError: (error) => {
+              console.error("Failed to update order:", error);
+              alert("Failed to update order. Please try again.");
+            },
+          }
         );
-        router.push(`/${qr}/order-status/${orderId}?businessId=${businessId}`);
       } else {
-        alert("Order placed, but could not get order or business ID.");
+        // Place new order
+        const orderResponse = await placeOrder(getOrderPayload());
+        clearCart();
+        setIsCartOpen(false);
+
+        // Extract orderId from the response
+        const newOrderId = orderResponse?.data?._id || orderResponse?._id;
+
+        // Pass both orderId and businessId to the order status page
+        if (newOrderId && businessId) {
+          const redirectUrl = `/${qr}/order-status/${newOrderId}?businessId=${businessId}`;
+          console.log(
+            "[CartSummary] Redirecting to:",
+            redirectUrl,
+            "with businessId:",
+            businessId
+          );
+          router.push(
+            `/${qr}/order-status/${newOrderId}?businessId=${businessId}`
+          );
+        } else {
+          alert("Order placed, but could not get order or business ID.");
+        }
       }
     } catch (err: any) {
       alert(err?.message || "Failed to place order");
@@ -236,7 +282,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
             </div>
 
             {/* Cart Items */}
-            <div className="overflow-y-auto h-[calc(70vh-200px)]">
+            <div className="overflow-y-auto h-[calc(70vh-230px)]">
               {cart.map((item) => (
                 <CartItemRow
                   key={item.menuItemId + (item.varietyId || "")}
@@ -263,19 +309,25 @@ const CartSummary: React.FC<CartSummaryProps> = ({
             </div>
 
             {/* Footer with Total and Checkout */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-4">
+            <div className="px-6 py-6 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+              <div className="flex justify-between items-center mb-6">
                 <span className="text-lg font-bold">Total:</span>
                 <span className="text-xl font-bold">
                   {formatPrice(cartTotal)}
                 </span>
               </div>
               <Button
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-xl"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-2xl py-6 rounded-xl"
                 onClick={handlePlaceOrder}
-                disabled={isPlacingOrder}
+                disabled={isPlacingOrder || isEditingOrder}
               >
-                {isPlacingOrder ? "Placing Order..." : "Proceed to Order"}
+                {isPlacingOrder || isEditingOrder
+                  ? isEditing
+                    ? "Updating Order..."
+                    : "Placing Order..."
+                  : isEditing
+                  ? "Update Order"
+                  : "Proceed to Order"}
               </Button>
             </div>
           </div>
